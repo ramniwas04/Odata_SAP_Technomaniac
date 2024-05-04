@@ -1,0 +1,308 @@
+http://ECCEhp7.4vm.com:8073/sap/opu/odata/sap/ZEMPLOYEE_001_SRV/
+http://183.82.1.220:8073/sap/opu/odata/sap/ZEMPLOYEE_001_SRV/
+
+http://18.215.72.123:8080/sap/opu/odata/sap/ZCDS_REFERENCE_R_SRV/
+
+CRUD:- Create Read Update Delete
+Read -
+    /sap/opu/odata/sap/ZEMPLOYEE_002_SRV/EmployeeSet + GET =>  employeeset_get_entityset.
+    /sap/opu/odata/sap/ZEMPLOYEE_002_SRV/EmployeeSet(2) + GET => EMPLOYEESET_GET_ENTITY
+Create :-
+    /sap/opu/odata/sap/ZEMPLOYEE_002_SRV/EmployeeSet + POST => employeeset_create_entity
+Update
+    /sap/opu/odata/sap/ZEMPLOYEE_002_SRV/EmployeeSet(6) + PUT => 'EMPLOYEESET_UPDATE_ENTITY' 
+Delete
+   /sap/opu/odata/sap/ZEMPLOYEE_002_SRV/EmployeeSet(6) + DELETE => 'EMPLOYEESET_DELETE_ENTITY' 
+
+Access data through navigation
+   /sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderHeaders('4969')/Items
+   /sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderItems => salesorderitems_get_entityset
+
+Read with navigation path
+/sap/opu/odata/sap/ZSALESORDER_001_SRV/SalesOrderHeaderS + Get
+     =>salesorderheader_get_entityset
+
+/sap/opu/odata/sap/ZSALESORDER_001_SRV/SalesOrderHeaderS('4970')/OrderToItem_nav + Get
+      => salesorderitems_get_entityset
+
+/sap/opu/odata/sap/ZSALESORDER_001_SRV/SalesOrderItemS      => salesorderitems_get_entityset     
+
+
+Expand Query option :-
+  /sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderHeaders?$expand=Items
+     salesorderheader_get_entityset  => 100
+     salesorderitems_get_entityset   => 7970 ....100 times
+
+/sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderHeaders('4970')?$expand=Items
+   salesorderheader_get_entity => 4970
+   salesorderitems_get_entityset    => one time
+
+If we have implemented this then we have to implement 
+
+/IWFND/TRACES
+/IWFND/CACHE_CLEANUP
+
+http://183.82.1.220:8073/sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderHeaders?$expand=Items&$format=json
+
+They are automatically available in the framework, no further actions needed by development.
+$format
+  /sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderHeaders?$format=json
+$expand	
+  /sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderHeaders?$expand=Items	
+$select	
+  /sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderHeaders?$select=SalesOrder,SalesOrg,Vtweg&$format=json
+$count	
+  /sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderHeaders/$count
+$links	
+  /sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderHeaders('4970')/$links/Items
+$value
+  /sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderHeaders('4970')/Bstnk/
+  /sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderHeaders('4970')/Bstnk/$value
+
+They are available, but they require implementation efforts from development.
+
+
+
+
+
+Without implementation query option :- 
+$select :-
+/sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderHeaders?$select=SalesOrder,Auart&$format=json 
+
+$count :-
+/sap/opu/odata/sap/ZSALESORDER_001_SRV/SalesOrderHeaders/$count
+
+$link :-
+/sap/opu/odata/sap/ZSALESORDER_001_SRV/SalesOrderHeaders('764')/$links/Items
+
+value :-
+/sap/opu/odata/sap/ZSALESORDER_001_SRV/SalesOrderHeaders('764')/Auart?$format=json
+$value
+/sap/opu/odata/sap/ZSALESORDER_001_SRV/SalesOrderHeaders('764')/Auart/$value
+
+
+$skiptoken
+
+
+
+
+
+
+
+
+
+
+
+
+
+$batch :-
+
+GET EmployeeSet?
+$skip=0&
+$top=20&
+$select=EmployeeId%2cName%2cCity%2cCompanyName%2cDepartment%2cStratDate%2cEndDate%2cSalary%2cCurrency&
+$inlinecount=allpages
+
+http://183.82.1.220:8073/sap/opu/odata/sap/ZEMPLOYEE_002_SRV
+****************************************************************************
+Content-Type   multipart/mixed; boundary=batch
+
+--batch_01
+Content-Type: application/http
+Content-Transfer-Encoding: binary
+Accept: application/json
+
+GET SalesOrderHeaders('4970') HTTP/1.1
+
+
+--batch_01--
+********************************************************************************
+--batch_01
+Content-Type: application/http
+Content-Transfer-Encoding: binary
+Accept: application/json
+
+GET SalesOrderHeaders('4970') HTTP/1.1
+
+
+--batch_01
+Content-Type: application/http
+Content-Transfer-Encoding: binary
+Accept: application/json
+
+GET SalesOrderHeaders('4969') HTTP/1.1
+
+
+--batch_01--
+********************************************************************************
+To perform changeset operations, we have two ways:
+To redefine respective operations & handle all operations there itself. :- which we have done
+Enable defer mode & handle all changeset operations in one place. 
+
+--batch_01
+Content-Type:multipart/mixed; boundary=changeset
+
+--changeset
+Content-Type: application/http
+Content-Transfer-Encoding: binary
+
+PUT EmployeeSet(12) HTTP/1.1
+Content-Type: application/json
+
+{
+    "EmployeeId" : 12,
+    "Name" : "Ram",
+    "City" : "New Jaipur 1",
+    "CompanyName" : "SAP Technomaniac",
+    "Department" : "SAP Technomaniac",
+    "StratDate" : "\/Date(1643500800000)\/",
+    "EndDate" : "\/Date(1706054400000)\/",
+    "Salary" : "2400000.00",
+    "Currency" : "INR"}
+
+--changeset--
+
+--batch_01--
+******************************************************************************
+--batch_01
+Content-Type:multipart/mixed; boundary=changeset
+
+--changeset
+Content-Type: application/http
+Content-Transfer-Encoding: binary
+
+DELETE EmployeeSet(12) HTTP/1.1
+
+
+--changeset--
+
+--batch_01--
+*****************************************************************************
+--batch_01
+Content-Type:multipart/mixed; boundary=changeset
+
+--changeset
+Content-Type: application/http
+Content-Transfer-Encoding: binary
+
+PUT EmployeeSet(12) HTTP/1.1
+Content-Type: application/json
+
+{
+    "EmployeeId" : 12,
+    "Name" : "Ram",
+    "City" : "New Jaipur 2",
+    "CompanyName" : "SAP Technomaniac",
+    "Department" : "SAP Technomaniac",
+    "StratDate" : "\/Date(1643500800000)\/",
+    "EndDate" : "\/Date(1706054400000)\/",
+    "Salary" : "2400000.00",
+    "Currency" : "INR"}
+
+
+--changeset
+Content-Type: application/http
+Content-Transfer-Encoding: binary
+
+DELETE EmployeeSet(12) HTTP/1.1
+
+
+
+--changeset--
+
+--batch_01--
+
+
+
+
+*********************************************************
+$orderby
+/sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderHeaders?$orderby=SalesOrder desc&$format=json
+/sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderHeaders?$orderby=Kunnr asc,SalesOrder desc&$format=json
+
+$filter
+/sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderHeaders?$filter=Kunnr eq '1390'
+/sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderHeaders?$filter=( Kunnr eq '1390' or Kunnr eq '1175')
+/sap/opu/odata/sap/ZSALESORDER_002_SRV/SalesOrderHeaders?$filter=( Kunnr eq '1390' or Kunnr eq '1175') and Vtweg eq '10'
+List report page
+
+
+$top		
+$skip	
+$inlinecount	
+$skiptoken
+
+****************************************************
+Function Import:-
+so_count_by_status
+
+Importing :-
+ Customer
+Exporting :-
+ Customer
+ NotProcesed
+ CompleteProcess
+ NotRelvent
+
+
+
+http://183.82.1.220:8073/sap/opu/odata/sap/ZSALESORDER_001_SRV/
+
+
+*******************************************************************
+
+
+
+
+
+
+    CASE  iv_action_name .
+      WHEN 'get_so_status'.
+        TYPES:BEGIN OF ty_tab,
+               vbeln TYPE vbeln,
+               kunnr TYPE kunnr,
+               rfstk TYPE rfstk,
+              END OF ty_tab.
+        DATA: it_tab TYPE TABLE OF ty_tab,
+              lv_kunnr TYPE kunnr,
+              ls_count TYPE zcl_zsalesorder_001_mpc=>ts_count,
+              lt_count TYPE zcl_zsalesorder_001_mpc=>tt_count.
+
+        DATA(lt_para)  =   io_tech_request_context->get_parameters( ).
+
+        lv_kunnr = lt_para[ 1 ]-value .
+        lv_kunnr = |{ lv_kunnr ALPHA = IN } |.
+
+
+
+        SELECT so~vbeln
+               so~kunnr
+               sta~rfstk
+          FROM vbak AS so
+          LEFT OUTER JOIN vbuk AS sta
+          ON so~vbeln = sta~vbeln
+          INTO TABLE it_tab
+          WHERE so~kunnr = lv_kunnr.
+        IF sy-subrc IS INITIAL.
+          ls_count-customer = lv_kunnr.
+          LOOP AT it_tab ASSIGNING FIELD-SYMBOL(<ls_tab>).
+            CASE <ls_tab>-rfstk.
+              WHEN 'C'.
+                ls_count-completeprocess = ls_count-completeprocess + 1.
+              WHEN 'A'.
+                ls_count-notprocesed  = ls_count-notprocesed + 1.
+              WHEN ' '.
+                ls_count-notrelvent =  ls_count-notrelvent  + 1.
+            ENDCASE.
+
+          ENDLOOP.
+          APPEND ls_count to lt_count.
+
+          /iwbep/if_mgw_conv_srv_runtime~copy_data_to_ref(
+            EXPORTING
+              is_data = lt_count
+            CHANGING
+              cr_data = er_data
+          ).
+        ENDIF.
+    ENDCASE.
